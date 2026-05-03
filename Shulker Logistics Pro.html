@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pro Shulker Planner</title>
+    <style>
+        :root {
+            --bg: #1a1a1a;
+            --panel: #c6c6c6;
+            --slot: #8b8b8b;
+            --slot-border-light: #ffffff;
+            --slot-border-dark: #373737;
+            --accent: #55ff55;
+            --text-dark: #3f3f3f;
+            --mc-blue: #5555ff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 25px;
+            max-width: 1100px;
+            width: 100%;
+        }
+
+        /* Minecraft Aesthetic Panels */
+        .panel {
+            background: var(--panel);
+            padding: 15px;
+            border: 4px solid #000;
+            image-rendering: pixelated;
+            color: var(--text-dark);
+            box-shadow: inset -4px -4px 0px #555, inset 4px 4px 0px #fff;
+        }
+
+        h1 { color: #fff; text-shadow: 3px 3px #000; letter-spacing: 2px; }
+        h3 { margin-top: 0; margin-bottom: 10px; font-size: 1.1em; }
+
+        /* Inputs */
+        .input-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 0.9em; }
+        
+        input, select {
+            width: 100%;
+            padding: 10px;
+            background: #000;
+            border: 2px solid #8b8b8b;
+            color: var(--accent);
+            box-sizing: border-box;
+            font-family: monospace;
+            font-size: 1.1em;
+            outline: none;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #8b8b8b;
+            color: white;
+            border: 3px solid #000;
+            cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
+            box-shadow: inset -3px -3px 0px #444, inset 3px 3px 0px #bbb;
+            margin-top: 10px;
+        }
+
+        button:hover { background: #999; }
+        button:active { box-shadow: inset 3px 3px 0px #444; transform: translateY(1px); }
+        .btn-reset { background: #aa0000; margin-top: 20px; }
+
+        /* Shulker Grid Styling */
+        .shulker-container { display: flex; flex-direction: column; gap: 20px; }
+        
+        .shulker-box {
+            animation: fadeIn 0.3s ease;
+        }
+
+        .shulker-grid {
+            display: grid;
+            grid-template-columns: repeat(9, 44px);
+            gap: 0;
+            background: #8b8b8b;
+            border: 3px solid #373737;
+            width: fit-content;
+        }
+
+        .slot {
+            width: 44px;
+            height: 44px;
+            background: #8b8b8b;
+            border: 2px solid;
+            border-color: var(--slot-border-dark) var(--slot-border-light) var(--slot-border-light) var(--slot-border-dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            box-sizing: border-box;
+            cursor: pointer;
+        }
+
+        .slot:hover { background: rgba(255, 255, 255, 0.2); }
+
+        .item-icon {
+            font-size: 24px;
+            filter: drop-shadow(2px 2px 0px rgba(0,0,0,0.5));
+        }
+
+        .stack-count {
+            position: absolute;
+            bottom: 2px;
+            right: 4px;
+            font-size: 16px;
+            color: white;
+            text-shadow: 2px 2px #000;
+            font-family: monospace;
+            font-weight: bold;
+            pointer-events: none;
+        }
+
+        #summary-bar {
+            grid-column: 1 / -1;
+            background: var(--mc-blue);
+            color: white;
+            text-align: center;
+            font-size: 1.2em;
+            text-shadow: 2px 2px #000;
+            box-shadow: inset -4px -4px 0px #0000aa, inset 4px 4px 0px #7777ff, 0px 4px 0px #000;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>SHULKER LOGISTICS PRO</h1>
+
+    <div class="dashboard">
+        <div class="panel">
+            <h3>ADD RESOURCES</h3>
+            <div class="input-group">
+                <label>ITEM NAME</label>
+                <input type="text" id="itemName" placeholder="e.g. Diamond Block" list="suggestions">
+                <datalist id="suggestions">
+                    <option value="Stone">
+                    <option value="Wood">
+                    <option value="Iron Ingot">
+                    <option value="Gold Ingot">
+                    <option value="Diamond">
+                </datalist>
+            </div>
+            
+            <div class="input-group">
+                <label>QUANTITY</label>
+                <input type="number" id="itemAmount" value="64" min="1">
+            </div>
+
+            <div class="input-group">
+                <label>UNIT</label>
+                <select id="amountType">
+                    <option value="items">Total Items</option>
+                    <option value="stacks">Stacks (x64)</option>
+                </select>
+            </div>
+
+            <button onclick="addItem()">Add to Box</button>
+            <button class="btn-reset" onclick="resetPlanner()">Clear All</button>
+        </div>
+
+        <div class="shulker-container" id="shulkerDisplay">
+            <!-- Shulkers appear here -->
+        </div>
+
+        <div id="summary-bar" class="panel">
+            Total Shulkers Needed: <span id="totalShulkers">0</span>
+        </div>
+    </div>
+
+    <script>
+        let inventory = [];
+
+        function addItem() {
+            const nameInput = document.getElementById('itemName');
+            const amountInput = document.getElementById('itemAmount');
+            
+            const name = nameInput.value || 'Items';
+            const amount = parseInt(amountInput.value);
+            const type = document.getElementById('amountType').value;
+            
+            let totalItems = type === 'stacks' ? amount * 64 : amount;
+            
+            if (isNaN(totalItems) || totalItems <= 0) return;
+
+            // Smart Merge: If item exists, add to its total
+            const existingIdx = inventory.findIndex(i => i.name.toLowerCase() === name.toLowerCase());
+            if (existingIdx > -1) {
+                inventory[existingIdx].totalItems += totalItems;
+            } else {
+                inventory.push({ name, totalItems });
+            }
+
+            nameInput.value = '';
+            nameInput.focus();
+            render();
+        }
+
+        function removeItem(name) {
+            inventory = inventory.filter(i => i.name !== name);
+            render();
+        }
+
+        function render() {
+            const display = document.getElementById('shulkerDisplay');
+            display.innerHTML = '';
+            
+            let slots = [];
+
+            // 1. Convert inventory into 64-size stacks
+            inventory.forEach(item => {
+                let remaining = item.totalItems;
+                while (remaining > 0) {
+                    let count = Math.min(remaining, 64);
+                    slots.push({ name: item.name, count: count });
+                    remaining -= count;
+                }
+            });
+
+            // 2. Group stacks into chunks of 27 (Shulker size)
+            const shulkers = [];
+            for (let i = 0; i < slots.length; i += 27) {
+                shulkers.push(slots.slice(i, i + 27));
+            }
+
+            // 3. Render
+            shulkers.forEach((shulkerItems, idx) => {
+                const boxDiv = document.createElement('div');
+                boxDiv.className = 'panel shulker-box';
+                boxDiv.innerHTML = `<h3>SHULKER BOX #${idx + 1}</h3>`;
+
+                const grid = document.createElement('div');
+                grid.className = 'shulker-grid';
+
+                for (let i = 0; i < 27; i++) {
+                    const slot = document.createElement('div');
+                    slot.className = 'slot';
+                    
+                    const item = shulkerItems[i];
+                    if (item) {
+                        slot.innerHTML = `
+                            <span class="item-icon">📦</span>
+                            <span class="stack-count">${item.count}</span>
+                        `;
+                        slot.title = `Click to remove all ${item.name}`;
+                        slot.onclick = () => removeItem(item.name);
+                    }
+                    grid.appendChild(slot);
+                }
+
+                boxDiv.appendChild(grid);
+                display.appendChild(boxDiv);
+            });
+
+            document.getElementById('totalShulkers').innerText = shulkers.length;
+            
+            if (inventory.length === 0) {
+                display.innerHTML = '<div class="panel" style="text-align:center; opacity:0.6;">Manifest is empty. Add items to begin planning.</div>';
+            }
+        }
+
+        function resetPlanner() {
+            if(confirm("Clear all items?")) {
+                inventory = [];
+                render();
+            }
+        }
+
+        // Initial State
+        render();
+    </script>
+</body>
+</html>
